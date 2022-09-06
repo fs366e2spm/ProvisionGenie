@@ -11,7 +11,7 @@ we wanted to store the data somewhere.
 
 ### Decision - Microsoft Dataverse
 
-ProvisionGenie uses Microsoft Dataverse to store all data about the (to be) provisioned teams in 5 different tables (for more information on this, see [Solution Overview](corecomponents/logicapps.md#solution-overview)).
+ProvisionGenie uses Microsoft Dataverse to store all data about the (to be) provisioned teams in 6 different tables (for more information on this, see [Solution Overview](corecomponents/logicapps.md#solution-overview)).
 
 ### Alternatives
 
@@ -55,7 +55,7 @@ Trying to circumvent the premium license for Dataverse by choosing Azure SQL or 
 
 ### Consequences of choosing Dataverse
 
-Using Dataverse results in licensing costs, as every user will need an Power Apps per app or a PowerApps per user plan. We are aware that this might come across as hurdle and that the desire to somehow bypass is hugh. But enterprise-grade solutions don't come for free.
+Using Dataverse results in licensing costs, as every user will need an Power Apps per app or a Power Apps per user plan. We are aware that this might come across as hurdle and that the desire to somehow bypass is hugh. But enterprise-grade solutions don't come for free.
 
 ## Integration
 
@@ -79,20 +79,22 @@ In our first proof of concept, we still used Power Automate to provision a custo
 
 We use [Microsoft Graph API](https://docs.microsoft.com/graph/overview) to provision all assets that were requested by users using the Power Apps Canvas app with Azure Logic Apps.
 
-Using Microsoft Planner for day-to-day task management within a team is considered to be a best practice. Unfortunately, the Planner API lacks of having application level permissions.
+Using Microsoft Planner for day-to-day task management within a team is considered to be a good practice. Unfortunately, the Planner API lacks of having application level permissions. Without application level permissions, we can't provision Planner plans with a Managed Identity.
 
 ### Decision
 
 Therefore, we decided to not provision it, as it would cause a lot of disadvantages like
 
-- need of a service account
+- need of a service account (fake user)
 - which couldn't be MFA-enabled
 
 ### Consequences of not provisioning Planner
 
-We want to give ProvisionGenie users the best experience to work in Teams as from day 1. If they don't get a planner plan by our process, we needed to present them an alternative. This is why we chose to ask our users if they wanted to have a SharePoint list with columns that mimic Planner behavior provisioned for them. We introduce users as well to gallery view in lists so that they get a similar experience as in Planner. As we can create SharePoint lists and their columns with application permissions, this is as a secure alternative.
+We want to give ProvisionGenie users the best experience to work in Teams as from day 1. If they don't get a Planner plan by our process, we needed to present them an alternative. This is why we chose to ask our users if they wanted to have a SharePoint list with columns that mimic Planner behavior provisioned for them. We introduce users as well to gallery view in lists so that they get a similar experience as in Planner. As we can create SharePoint lists and their columns with application permissions using a Managed Identity, this is as a secure alternative. Also, SharePoint lists provide version history and a recycle bin.
 
 ![task list in SharePoint](media/architecturedecisions/tasklist.png)
+
+However, if you would like to help Microsoft to prioritize development of a fully functional API for Planner including application level permissions, you can upvote for this idea in the [Microsoft 365 Developer ideas forum](https://techcommunity.microsoft.com/t5/microsoft-365-developer-platform/application-permissions-for-planner-apis/idi-p/2266449).
 
 ## Teams Wiki
 
@@ -106,4 +108,6 @@ Usually, a new Team also contains a Teams Wiki tab. The Wiki is a (hidden) Share
 
 As part of our provisioning process, we delete the Teams Wiki from all created channels. We believe, that the Wiki is not a good place to store any kind of knowledge in.
 
-Of course our decision to delete the Wikis from all initial channels does not prevent users from adding a Wiki tab to an existing or manually created channel, but at least it is not the default behavior in a new Team. In the future, we want to automatically add a OneNote notebook.
+Of course our decision to delete the Wikis from all initial channels does not prevent users from adding a Wiki tab to an existing or manually created channel, but at least it is not the default behavior in a new Team.
+
+Optionally, we add the Notebook of the SharePoint site that backs the team, as a tab to the Channel **General** and already add the first note there.

@@ -6,4 +6,9 @@ In addition to our issues list we want you to know what's new and what's coming.
 
 ## Next up
 
-We are right now working on the feature: **add members to a Team**
+After taking a little break 😇 we will work on the following features:
+
+- check if a Team already exists
+- add approval
+- allow users to create multiple lists and libraries
+- add Azure Application Insights for logging and monitoring

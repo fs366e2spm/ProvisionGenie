@@ -13,8 +13,9 @@ ProvisionGenie is an app for [Microsoft Teams](https://www.microsoft.com/microso
 ## Core components of this solution
 
 - [Power Apps Canvas App](corecomponents/canvasapp.md) which serves as our UI
-- [5 Dataverse tables](corecomponents/logicapps.md#solution-overview) where we log all Teams requests
-- [5 Azure Logic Apps flows](corecomponents/logicapps.md) which we use to provision the requested Teams
+- [8 Dataverse tables](corecomponents/logicapps.md#solution-overview) where we log all Teams requests
+- [8 Azure Logic Apps flows](corecomponents/logicapps.md) which we use to provision the requested Teams
+- [Language Packs](corecomponents/languagepacks.md) to support 11 languages
 
 ## How to get started
 
@@ -26,14 +27,14 @@ ProvisionGenie is an app for [Microsoft Teams](https://www.microsoft.com/microso
 ## What does it cost?
 
 - ProvisionGenie is an open-source project and we won't charge you for using, extending, or modifying it. For more information see our [license](https://github.com/ProvisionGenie/ProvisionGenie/blob/main/LICENSE.md)
-- To make the app work, you will need all of the following
+- To make the app work, you will need all of the following:
   - an [Azure subscription](https://azure.microsoft.com/) -for more detail see [Cost estimation](costestimation.md)
   - a [Power Apps per app](https://powerapps.microsoft.com/pricing/) or a [Power Apps per user](https://powerapps.microsoft.com/pricing/) plan as we use [Microsoft Dataverse](https://powerplatform.microsoft.com/dataverse/) to store data
   - a [Microsoft 365 license](https://www.microsoft.com/microsoft-365/business/compare-all-microsoft-365-business-products) for every user who uses the app.
 
 ## Roadmap
 
-This is our very first Version 1.0.0. - it is our minimal l♥vable product and we are excited about this first release! For more info in versioning, head over to [Release Notes](about/releasenotes.md).
+This is already Version 3.0.0. - we love the continuous work on it. For more info in versioning, head over to [Release Notes](about/releasenotes.md).
 
 You can also have a look into our [Roadmap](about/roadmap.md) to see what's coming in the future.
 
@@ -45,6 +46,7 @@ We welcome contributions, we summarized how you can contribute in the [Contribut
 - fix documentation
 - find (and fix) bugs
 - extend use cases
+- provide translations
 
 If you want to know more how that works, we created a [Contribution Guide](https://github.com/ProvisionGenie/ProvisionGenie/blob/main/CONTRIBUTING.md) and also [Issue](https://github.com/ProvisionGenie/ProvisionGenie/issues/new/choose) templates to make it easy for you.
 
@@ -57,7 +59,6 @@ We also listed [some features that we would like to add in the future](https://g
 Also, buy us coffee ☕☕☕ - ProvisionGenie wouldn't be possible without it!
 
 [!["Buy Us A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/mG3ghJC)
-
 
 ## Trademarks
 

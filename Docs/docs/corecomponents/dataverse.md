@@ -10,6 +10,7 @@ We chose Dataverse as our storage for all requests and created five tables:
     - TeamOwner
     - includeTaskList
     - includeWelcomePackage
+    - includeNotebook
 
 2. Each Team can have multiple channels, which we log in the **TeamsChannel** table, these are the most important columns:
     - Channelname
@@ -24,5 +25,7 @@ We chose Dataverse as our storage for all requests and created five tables:
     - ColumnName
     - ColumnType
     - ColumnValues (for ColumnType `Choice`)
+
+5. Each Team can have multiple members and owners, and each member/owner can be a member/owner in several Teams. We store all members and owners in the **Teams User** table. As this is a many-to-many relationship, Dataverse created the intersection tables **pg_teamsuser_teamsrequest_member** and  **pg_teamsuser_teamsrequest_owner** which hold the Teams Request ID so that we can link to the correct Team
 
 ![Dataverse-datamodel](../media/corecomponents/dataverse-datamodel.png)

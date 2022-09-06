@@ -2,18 +2,18 @@
 
 ![header image](../media/index/Genie_Header.png)
 
-We created 5 Azure Logic Apps to handle the provisioning of the Teams:
+We created 7 Azure Logic Apps to handle the provisioning of the Teams:
 
 Our flows pick up the values logged in the Dataverse tables to provision what the user requested:
 
- - [1. Main flow](#1-main-flow)
- - [2. Create team](#2-create-team)
 - [Azure Logic Apps](#azure-logic-apps)
     - [1. Main flow](#1-main-flow)
     - [2. Create team](#2-create-team)
-    - [3. Create List/Library](#3-create-listlibrary)
-    - [4. Create Task List](#4-create-task-list)
-    - [5. Welcome Package](#5-welcome-package)
+    - [3. Add people](#3-add-people)
+    - [4. Create List/Library](#4-create-listlibrary)
+    - [5. Create Task List](#5-create-task-list)
+    - [6. Welcome Package](#6-welcome-package)
+    - [7. Add Notebook](#7-add-notebook)
 
 ### 1. Main flow
 
@@ -24,12 +24,14 @@ The main flow takes care of the logic of the flows: executing the different step
 1. The main flow triggers when a new row is added into the **Teams Requests** table in Dataverse.
 2. The internal name of the to be created team is generated using the name provided by the team owner and a generated guid. This ensures that all team names are unique.
 3. The technical name is updated in the Teams Request row so that admins can easily find out which requests are linked to which Microsoft Teams teams.
-4. 5 variables are initialized that are used later on in the flow
+4. 7 variables are initialized that are used later on in the flow
    1. `Channels`: contains the array representation of the channels that need to be created.
    2. `DriveExistsCode`: stores the response of an HTTP request to check whether the SharePoint library has already been created for the team.
    3. `SiteExistsCode`: stores the response of an HTTP request to check whether the SharePoint site for the team has already been created.
    4. `LibraryColumns`: array representation of the columns that need to be created in the library.
    5. `ListColumns`: array representation of the columns that need to be created in the list.
+   6. `Members`: contains members to be added to the Teams
+   7. `Owners`: contains owners to be added to the Teams
 5. A 1 minute delay is added to ensure that the channels and other related table rows are linked to the Teams request row in Dataverse, since these cannot be linked upon creation of the Teams request row.
 6. The team is created in the Create Team scope, which is expanded below
    1. The related team channel rows are listed
@@ -58,6 +60,17 @@ The main flow takes care of the logic of the flows: executing the different step
 
 8. The task list is added to the team if the owner has indicated they want this in their team
 9. The welcome package is added to the team if the owner has indicated they want this in their team
+
+![Scope Add People](../media/corecomponents/LogicApps-Main-AddPeople-member.png)
+![Scope Add People](../media/corecomponents/LogicApps-Main-AddPeople-owner.png)
+![Scope Add People](../media/corecomponents/LogicApps-Main-AddPeople-condition.png)
+
+
+10. The related rows of the intersection table `pg_teamsuser_teamsrequest_members` get listed
+11. For each member the `members` variable gets appended to then reflect the UPN
+12. The related rows of the intersection table `pg_teamsuser_teamsrequest_owners` get listed
+13. For each member the `owners` variable gets appended to then reflect the UPN
+14. In case members or owners are not empty, the `ProvisionGenie-AddPeople` flow gets called
 
 ### 2. Create team
 
@@ -107,24 +120,42 @@ In the Create team flow, the requested team is created with the specified channe
 
 1.  A response is provided to the caller of the logic app with the team id.
 
-### 3. Create List/Library
+### 3. Add people
 
-The Create List and Create Library logic apps are nearly identical, except for the template type that is provided in the creation request. Therefore, they are discussed as one.
+![AddPeople Logic App](../media/corecomponents/LogicApps-AddPeople.png)
 
-⚠ In the future, these logic apps could be consolidated into one to simplify the solution.
+1. The logic app is triggered from a HTTP request as a child flow
+2. An array variable `People` is initialized
+3. The members get splitted by an `;`
+4. the `People` variable gets appended with the body that we need in the HTTP request to add members
+5. The owners get splitted by an `;`
+6. the `People` variable gets appended with the body that we need in the HTTP request to add owners
+7. HTTP request adds both members get added in a single call
+8. for each guest, the UPN gets created
+9. **TRY** scope: we check if this user already exists in Azure Active Directory
+10. **CATCH** scope: we invite the user to the tenat and wait until they accepted the invitation and update the user information for `firstName`, `lastName` and `Organization`
+11. We add the user to the group
+12. Respond to the request caller
 
-![Create List/Library logic app overview](../media/corecomponents/LogicApps-CreateList.png)
+### 4. Create List/Library
+
+As the logic for creating a list and creating a library is very similar, we do this in one flow:
+
+![Create List/Library logic app overview](../media/corecomponents/LogicApps-CreateListLibrary.png)
 
 1. The logic app is triggered from a HTTP request, for example as a child logic app.
 2. A `ListColumns` variable is initialized to store the column definition
-3. For each of the columns that are specified in the trigger
+3. A `ResourceType` variable is initialized to store if it is a list or a library
+4. For each of the columns that are specified in the trigger
    1. Depending on the type of column, append the column definition to the `ListColumns` variable
-4. Create the list/library using a request. **This is where there is a difference between the Create List/Create Library Logic Apps flows.**
-5. Respond to the request caller
+5. Switch cases for the columnm types
+6. Switch cases for the resource types
+7. Create the list/library using a request using the resource type
+8. Respond to the request caller
 
-### 4. Create Task List
+### 5. Create Task List
 
-The Create Task list logic app uses the Create List logic app to create a task list using a fixed definition of columns.
+The Create Task list logic app uses the **CreateLibraryList** logic app to create a task list using a fixed definition of columns.
 
 ![Create Task List overview](../media/corecomponents/LogicApps-CreateTaskList.png)
 
@@ -133,7 +164,7 @@ The Create Task list logic app uses the Create List logic app to create a task l
 3. The Create List Logic Apps flow is called with the task list fixed column definition to create the task list
 4. Respond to the request caller
 
-### 5. Welcome Package
+### 6. Welcome Package
 
 The welcome package adds a url with training material to the General channel of the new team
 
@@ -147,5 +178,21 @@ The welcome package adds a url with training material to the General channel of 
 4. A HTTP request lists the channels in the team
 5. The channel info is parsed
 6. The General channel is always the first channel returned when the channels are listed, this is extracted from the channel info
-7. An HTTP request is sent to add the training material url as a website tab in the new team's general channel
+7. An HTTP request is sent to add the training material URLas a website tab in the new team's general channel
 8. Respond to the request caller
+
+### 7. Add Notebook
+
+This flow adds the notebook of the SharePoint sites, that backs the team, to the channel **General** and creates the first section and the first page.
+
+![Add Notebook Overview](../media/corecomponents/LogicApps-AddNotebook.png)
+
+1. The Logic Apps is triggered from a HTTP request, for example as a child logic app
+2. An HTTP request lists the channels in the team
+3. An HTTP request triggers the creation of the Notebook in the site that backs the Team.
+4. An HTTP request gets the notebook information
+5. An HTTP request creates a section in the notebook
+6. An HTTP request creates a page in the notebook
+7. A variable is initialized for the `Notebook URL`
+8. An HTTP request adds the Notebook to the Channel **General**
+9. Respond to the request caller
